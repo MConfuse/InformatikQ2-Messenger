@@ -60,7 +60,6 @@ public class ConfFileReaderV2
 		if (braceOpen != -1 && braceClose != -1)
 		{
 			// differentiate between old and new inline formatting
-			System.out.println(line);
 			int nameEnd = findFirstMatchingPosition(line, '\\', ':');
 			if (nameEnd == -1) // old confF format
 				return;
