@@ -1,4 +1,4 @@
-package de.confuse;
+package de.confuse.abiKlassen;
 
 import java.io.File;
 
