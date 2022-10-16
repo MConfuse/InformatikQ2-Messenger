@@ -28,6 +28,7 @@ public class MessengerClientMain
 	{
 		System.out.println("Starte Client...");
 		instance = this;
+		new MessageHandler();
 		this.messengerClient = new MessengerClient("localhost", 1887);
 
 		consoleThread();
@@ -87,6 +88,7 @@ public class MessengerClientMain
 			}
 			else if (line.startsWith("nachricht="))
 			{
+				System.out.println("The IP:Port of your receiver:");
 				String receiver = reader.readLine();
 
 				messengerClient.nachricht(receiver, line.substring(line.indexOf('=') + 1));

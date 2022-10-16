@@ -3,6 +3,7 @@ package de.confuse;
 import de.confuse.abiKlassen.Client;
 import de.confuse.confFileV2.ConfFileFieldV2;
 import de.confuse.confFileV2.ConfFileReaderV2;
+import de.confuse.eventapi.EventManager;
 import de.confuse.security.AesUtilities;
 import de.confuse.security.RsaUtilities;
 import de.confuse.util.CryptoCommunication;
@@ -11,7 +12,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class MessengerClient extends Client
@@ -37,7 +40,7 @@ public class MessengerClient extends Client
 	/**
 	 * Der Name den der Server gegeben hat
 	 */
-	private String name;
+	private String ip;
 	/**
 	 * Speichert die Verschlüsselungsdaten von Client und Server.<br>
 	 * <strong>Ordnung des Arrays:</strong>
@@ -100,7 +103,7 @@ public class MessengerClient extends Client
 					ConfFileFieldV2 stage2HandshakeOutgoing =
 							Objects.requireNonNull(CryptoCommunication.generateCryptoHandshakeStage2(externerPublicKey,
 									clientKeyPair.getPublic(), clientSecretKey, clientIvParameterSpec)).put("receiver"
-									, user).put("sender", name.split(":"));
+									, user).put("sender", ip.split(":"));
 					send(stage2HandshakeOutgoing.getFormattedFieldV2(0));
 					return;
 				}
@@ -114,7 +117,7 @@ public class MessengerClient extends Client
 					{
 						fullStorage = CryptoCommunication.extractHandshakeDataStage2(handshake,
 								serverCryptoStorageArray[0].serverPrivateKey);
-						name = handshake.getValue("name");
+						ip = handshake.getValue("name");
 						serverCryptoStorageArray[1] = fullStorage; // Alle Daten erhalten
 					}
 					else
@@ -135,7 +138,7 @@ public class MessengerClient extends Client
 											(fullStorage.serverPublicKey, fullStorage.secretKey,
 													fullStorage.ivParameterSpec))
 									.put("receiver", handshake.getValueObject("sender").getValues())
-									.put("sender", name.split(":"));
+									.put("sender", ip.split(":"));
 					send(stage3HandshakeOutgoing.getFormattedFieldV2(0));
 					return;
 				}
@@ -170,8 +173,7 @@ public class MessengerClient extends Client
 						direktChatCryptoStorageHashMap.get(formattedUser)[1],
 						direktChatCryptoStorageHashMap.get(formattedUser)[0].serverPrivateKey);
 
-				// TODO: Interface hierfür erstellen, welches implementiert werden kann?
-				System.out.println("nachricht = " + nachricht);
+				EventManager.call(new EventMessageReceived(nachricht));
 			}
 
 		}
@@ -221,7 +223,7 @@ public class MessengerClient extends Client
 		// Das Handshake Package
 		final ConfFileFieldV2 handshake =
 				CryptoCommunication.generateCryptoHandshakeStage1(clientKeyPair.getPublic()).put("receiver",
-						name.split(":")).put("sender", this.name.split(":"));
+						name.split(":")).put("sender", this.ip.split(":"));
 
 		send(handshake.getFormattedFieldV2(0));
 		System.out.println("Verbindungsversuch gestartet!");
@@ -248,7 +250,7 @@ public class MessengerClient extends Client
 		final ConfFileFieldV2 cryptoPacket = Objects.requireNonNull(CryptoCommunication.generateCryptoPacket(nachricht
 				, cryptoStorage[1].serverPublicKey,
 				cryptoStorage[1].secretKey, cryptoStorage[1].ivParameterSpec)).put("receiver",
-				name.split(":")).put("sender", this.name.split(":"));
+				name.split(":")).put("sender", this.ip.split(":"));
 
 		send(cryptoPacket.getFormattedFieldV2(0));
 		System.out.println("Nachricht gesendet!");
